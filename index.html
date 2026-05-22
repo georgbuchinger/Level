@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Level Up Your Fluency!</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;800&family=Inter:wght@400;600&display=swap');
+
+        :root { --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --accent: #0284c7; --header: #0f172a; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        
+        header { padding: 4rem 2rem 2rem 2rem; font-family: 'Outfit', sans-serif; font-size: 5rem; font-weight: 800; color: var(--header); letter-spacing: -2px; }
+        
+        #game-board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2rem; padding: 2rem; width: 95%; max-width: 1400px; }
+        .card-stack { background: var(--card); border: 4px solid #e2e8f0; border-radius: 1.5rem; padding: 4rem 1rem; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 800; cursor: pointer; transition: 0.2s; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .card-stack:hover { border-color: var(--accent); background: #f0f9ff; transform: scale(1.02); }
+
+        #dice-row { margin-top: 3rem; width: 95%; max-width: 1400px; display: flex; justify-content: center; }
+        #dice-area { background: var(--header); color: white; padding: 2rem 5rem; border-radius: 1rem; font-size: 3rem; font-weight: 800; cursor: pointer; box-shadow: 0 10px 15px rgba(0,0,0,0.2); transition: 0.2s; }
+        #dice-area:hover { transform: translateY(-5px); background: #1e293b; }
+
+        #modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(255,255,255,0.98); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
+        .card-box { width: 85%; max-width: 1000px; padding: 5rem; background: white; border-radius: 2rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.2); text-align: center; border: 2px solid #e2e8f0; }
+        
+        #prompt-text { font-size: 4rem; font-weight: 700; margin: 3rem 0; line-height: 1.3; min-height: 200px; }
+        .timer-row { display: flex; align-items: center; justify-content: center; gap: 4rem; margin-top: 3rem; }
+        
+        #time-display { font-size: 7rem; font-weight: 200; width: 200px; }
+        .btn { padding: 2rem 4rem; font-size: 2rem; cursor: pointer; border-radius: 1rem; border: none; font-weight: 700; }
+        #start-btn { background: var(--accent); color: white; }
+        
+        .hourglass { width: 80px; height: 140px; border: 6px solid #64748b; border-radius: 10px; position: relative; overflow: hidden; }
+        .sand { background: var(--accent); width: 100%; height: 100%; position: absolute; bottom: 0; transition: height linear; }
+    </style>
+</head>
+<body>
+
+    <header>Level Up Your Fluency!</header>
+
+    <div id="game-board">
+        <div class="card-stack" onclick="draw('Speak', 60)">SPEAK</div>
+        <div class="card-stack" onclick="draw('Think', 20)">THINK</div>
+        <div class="card-stack" onclick="draw('Roleplay', 60)">ROLEPLAY</div>
+        <div class="card-stack" onclick="draw('Debate', 60)">DEBATE</div>
+        <div class="card-stack" onclick="draw('Chance', 60)">CHANCE</div>
+    </div>
+
+    <div id="dice-row">
+        <div id="dice-area" onclick="rollDice()">🎲 ROLL DICE</div>
+    </div>
+
+    <div id="modal">
+        <div class="card-box">
+            <h2 id="cat-title" style="color: var(--accent); margin:0; font-size: 3rem;">Category</h2>
+            <div id="prompt-text">Prompt</div>
+            <div class="timer-row">
+                <div id="time-display">--</div>
+                <div class="hourglass"><div id="sand" class="sand" style="height:100%"></div></div>
+                <button id="start-btn" class="btn" onclick="startTimer()">START TIMER</button>
+                <button class="btn" style="background:#e2e8f0" onclick="closeModal()">CLOSE</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const prompts = {
+            Speak: ["The most influential person you have met.", "A travel destination that lived up to the hype.", "The most difficult decision you’ve ever had to make.", "Why some people are obsessed with social media.", "A hobby you would love to start if you had the time.", "The pros and cons of living in a big city.", "A time you learned from a major mistake.", "The invention that has changed the world the most.", "Describe your perfect Saturday.", "If you could have dinner with any historical figure, who would it be?", "The advantages of being an only child vs. having siblings.", "Why physical books are better (or worse) than e-books.", "A song that always puts you in a good mood.", "The biggest challenge young adults face today.", "If you won a million dollars, how would you change your life?", "Describe a childhood tradition you still practice.", "Is it better to be a generalist or a specialist?", "The importance of learning a second language.", "A film or book that changed your perspective on life.", "The benefits of taking a gap year before university.", "Why some people prefer working from home.", "The qualities of a true friend.", "Your opinion on space exploration.", "How technology has changed the way we communicate.", "A food you hated as a child but love now.", "The impact of climate change on your local area.", "Why some people fear public speaking.", "Describe your dream house.", "A celebrity who uses their platform for good.", "The most exciting event you’ve ever attended.", "How to maintain a healthy work-life balance.", "The role of AI in our future education.", "Why you should (or shouldn't) eat meat.", "Your views on extreme sports.", "How to be a good listener.", "The impact of fashion trends on self-esteem.", "A secret talent you possess.", "Why do people enjoy horror movies?", "The importance of preserving old buildings.", "What makes a country a great place to live?", "A piece of advice you’d give your younger self.", "The difference between being busy and being productive.", "Why some people become teachers.", "The influence of advertising on our purchasing habits.", "A superstition you secretly believe in.", "The importance of art in schools.", "How to handle a stressful situation.", "What you hope to be doing in five years.", "The benefits of meditation or mindfulness.", "Your favorite season and why."],
+            Think: ["Things you find in a kitchen cupboard.", "Adjectives to describe a terrible movie.", "Reasons for being late to class.", "Things that make a loud noise.", "Ways to save money.", "Items you would take to a desert island.", "Professional jobs that require a uniform.", "Things you can do in under five minutes.", "Synonyms for happy.", "Things that are usually red.", "Excuses for not doing homework.", "Hobbies that require equipment.", "Things you buy at a pharmacy.", "Fruits that aren't round.", "Things that make you feel relaxed.", "Modes of transport.", "Things you see at an airport.", "Adjectives to describe a busy street.", "Ways to say goodbye to a friend.", "Things found in an office.", "Animals that live in the ocean.", "Things you can recycle.", "Words related to weather.", "Things you do before you go to sleep.", "Items in a toolbox.", "Reasons to celebrate.", "Things that grow in a garden.", "Adjectives for describing food.", "Things you see in a park.", "Sports played with a ball.", "Things you can learn online.", "Household chores you dislike.", "Ways to travel sustainably.", "Things found in a backpack.", "Synonyms for big.", "Things that can be broken.", "Places where you shouldn't use a phone.", "Things that make you laugh.", "Items of clothing.", "Types of music.", "Things you see in a bathroom.", "Ways to show someone you care.", "Reasons to learn a new skill.", "Things you can do with a computer.", "Verbs of movement.", "Things found in a hotel room.", "Adjectives to describe a boring lecture.", "Reasons to visit another country.", "Things that run on batteries.", "Hobbies that are free."],
+            Roleplay: ["Customer complaining about a cold meal.", "Two friends planning a trip, one budget, one luxury.", "A teenager asking for a later curfew.", "Two strangers stuck in an elevator.", "An interviewer and a candidate with no experience.", "A tour guide and a tourist searching for a fake place.", "Two people trying to agree on a movie.", "A doctor and a patient terrified of needles.", "A boss and an employee asking for a raise.", "Two neighbors arguing about a noisy dog.", "Shop assistant and customer returning item without receipt.", "Two long-lost friends meeting by surprise.", "A coach and an athlete who wants to quit.", "A police officer and a driver with an excuse.", "Two people on a plane, one wants to talk, one sleep.", "A landlord and tenant discussing a broken heater.", "A teacher and student discussing missing homework.", "Two people deciding who walks the dog in rain.", "A celebrity and an over-enthusiastic fan.", "Two detectives discussing a crime scene.", "A librarian and someone making noise.", "A trainer and a client trying to skip the workout.", "Two people lost, arguing over a map.", "Customer and agent booking a last-minute flight.", "Artist selling a masterpiece to a skeptic.", "Two roommates debating cleaning chores.", "Flight attendant and passenger refusing to turn off phone.", "Two strangers sharing a taxi.", "Parent helping child prepare for interview.", "Two people assembling furniture with no manual.", "Chef and food critic.", "Two people waiting for a 30-min late bus.", "Secretary and client trying to get a meeting.", "Two people discussing a strange basement sound.", "Journalist interviewing a shy rock star.", "Gym member and person hogging equipment.", "Two people choosing a gift for a friend.", "Hotel receptionist and guest who lost key.", "Two people in a waiting room guessing why.", "Mechanic and customer with a weird car noise.", "Bartender and customer having a bad day.", "Two people navigating a foreign city with dead phone.", "Dentist and patient who hasn't flossed.", "Two people practicing English in a cafe.", "Tour guide and tourist who lost passport.", "Two roommates deciding what to cook.", "Manager and employee who is always late.", "Two people arguing over a subway seat.", "Manager and customer with expired coupon.", "Two friends trying to write a song."],
+            Debate: ["Social media causes more harm than good.", "Students should have no homework on weekends.", "Zoos are cruel and should be closed.", "Video games are a waste of time.", "University education should be free.", "Living in the countryside is better.", "People should be fined for not recycling.", "Cars should be banned from city centers.", "Technology makes us less intelligent.", "A four-day work week is better.", "Traditional paper newspapers are obsolete.", "Professional athletes are paid too much.", "AI is a threat to humanity.", "It is better to have one close friend.", "Everyone should learn to code.", "Space exploration is a waste of money.", "The death penalty should be abolished.", "Beauty pageants are outdated.", "Private schools should be illegal.", "Online shopping is killing small businesses.", "Everyone should be a vegetarian.", "People should not own exotic pets.", "Happiness is more important than success.", "We should rely more on nuclear energy.", "Reality TV is trash.", "Better to marry later in life.", "Travel is the best education.", "All students should wear uniforms.", "Money can buy happiness.", "Stop looking for life on other planets.", "Fast food should be heavily taxed.", "The internet has made the world divided.", "Humans will live on Mars in 50 years.", "Plastic bags should be banned.", "It is wrong to keep animals for entertainment.", "Democracy is the best form of government.", "Parents should control internet access.", "Hard work is more important than talent.", "Stop using cash entirely.", "People shouldn't own guns.", "Online dating is better than in person.", "Advertising should be banned for children.", "Exams are not accurate.", "Everyone should take a gap year.", "Nuclear weapons should be banned.", "Modern art is not art.", "We rely too much on smartphones.", "Government should provide free transport.", "Fame is a curse.", "History is the most important subject."],
+            Chance: ["Move Forward Two Spaces!", "Swap Places With The Leader!", "Choose One Player. Both Of You Move Back Two Spaces!", "Choose A Category - Double Score If You Succeed!", "Choose A Category!", "Swap Places With The Player Behind You!"]
+        };
+
+        function rollDice() {
+            const roll = Math.floor(Math.random() * 6) + 1;
+            document.getElementById('dice-area').innerText = "🎲 ROLL: " + roll;
+        }
+
+        let timer, currentDuration;
+
+        function draw(cat, duration) {
+            document.getElementById('cat-title').innerText = cat.toUpperCase();
+            document.getElementById('prompt-text').innerText = prompts[cat][Math.floor(Math.random() * prompts[cat].length)];
+            document.getElementById('time-display').innerText = duration;
+            document.getElementById('sand').style.transition = 'none';
+            document.getElementById('sand').style.height = '100%';
+            document.getElementById('start-btn').style.display = 'inline-block';
+            
+            currentDuration = duration;
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        function startTimer() {
+            document.getElementById('start-btn').style.display = 'none';
+            const sand = document.getElementById('sand');
+            const display = document.getElementById('time-display');
+            
+            sand.style.transition = `height ${currentDuration}s linear`;
+            sand.style.height = '0%';
+            
+            let s = currentDuration;
+            display.innerText = s;
+            
+            timer = setInterval(() => {
+                s--;
+                display.innerText = s;
+                if(s <= 0) { clearInterval(timer); display.innerText = "0"; }
+            }, 1000);
+        }
+
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+            clearInterval(timer);
+        }
+    </script>
+</body>
+</html>
